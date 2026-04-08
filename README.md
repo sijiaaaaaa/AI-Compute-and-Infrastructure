@@ -1,1 +1,5 @@
-# AI-Infra-and-Ops
+#### AI-Infra-and-Ops
+
+Compute Economics
+
+TCO

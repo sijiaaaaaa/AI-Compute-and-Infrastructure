@@ -1,0 +1,35 @@
+# Scaling Laws for Neural Language Models — Annotated Reading Notes
+
+Paper: *Scaling Laws for Neural Language Models*
+Authors: Jared Kaplan, Sam McCandlish, Tom Henighan, Tom B. Brown, Benjamin Chess, Rewon Child, Scott Gray, Alec Radford, Jeffrey Wu, Dario Amodei
+arXiv: 2001.08361
+
+> This repository contains my personal annotated reading notes on the paper, with a focus on translating neural scaling laws into compute infrastructure and financial trade-off frameworks.
+
+## Section 1 — Introduction
+
+| Paper Reference                                                                                                                       | My Notes                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Topic:** Why language modeling is a natural domain for studying AI scaling. <br><br> **Paper location:** Introduction, paragraph 1. | The paper frames language as a useful domain because many reasoning tasks can be expressed and evaluated in language. For finance and infrastructure, this matters because language modeling creates a measurable technical output: cross-entropy loss. That loss can then be studied as a function of model size, dataset size, and compute budget. |
+| **Key idea:** Model performance may depend on architecture, model size, training compute, and data availability.                      | This is the starting point for compute economics. If performance depends predictably on these drivers, then training becomes a resource allocation problem: how much budget should go to parameters, data, training duration, and hardware capacity?                                                                                                 |
+
+## Section 2 — Cross-Entropy Loss
+
+| Paper Reference                                                                   | My Notes                                                                                                                                                                                                                                                     |                                                                                                                                               |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Topic:** The paper studies language model performance using cross-entropy loss. | Cross-entropy loss measures how much probability the model assigns to the correct next token. Lower loss means the model is better at predicting real text. In finance terms, this becomes the technical output metric we can compare against compute input. |                                                                                                                                               |
+| **Formula:** `Loss = -log P(correct next token                                    | previous tokens)`                                                                                                                                                                                                                                            | The negative sign converts “higher probability is better” into “lower loss is better.” This allows training to be framed as minimizing error. |
+
+## Section 3 — Power-Law Scaling
+
+| Paper Reference                                                                   | My Notes                                                                                                                                                                                                                                     |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Topic:** Loss scales as a power law with model size, dataset size, and compute. | Power-law scaling means performance improves predictably as scale increases, but with diminishing returns. This is exactly the bridge to financial trade-off analysis: more compute helps, but the marginal improvement per dollar declines. |
+| **Finance interpretation:** Fixed compute budget allocation.                      | The key question becomes: for the next dollar of compute spend, should we train a larger model, use more tokens, train longer, improve utilization, or choose a different infrastructure strategy?                                           |
+
+## Section 4 — Compute-Optimal Training
+
+| Paper Reference                                                      | My Notes                                                                                                                                                                                                                                              |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Topic:** The paper derives how to allocate a fixed compute budget. | This is the most relevant section for compute infrastructure finance. The paper suggests that model size, dataset size, and training duration should not be chosen independently; they should be optimized together under a fixed compute constraint. |
+| **Finance interpretation:** Compute is scarce capital.               | GPU capacity is not just an engineering input; it is a capital allocation decision. Scaling laws provide a way to estimate marginal model quality improvement per unit of compute spend.                                                              |

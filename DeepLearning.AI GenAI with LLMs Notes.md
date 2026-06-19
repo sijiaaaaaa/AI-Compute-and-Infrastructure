@@ -323,6 +323,7 @@ Key components:
 ---
 
 ## 9. Encoder-only / Decoder-only / Encoder-decoder Models
+<img width="515" height="270" alt="image" src="https://github.com/user-attachments/assets/1904edd8-74b0-43ca-990b-a7b64444322b" />
 
 ### Encoder-only Models
 

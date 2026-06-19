@@ -8,16 +8,8 @@ arXiv: 2001.08361
 
 ---
 
-## Section 1 — Introduction
 
-| Paper Reference                                                                                                                       | My Notes                                                                                                                                                                                                                                                                                                                                             |
-| ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Topic:** Why language modeling is a natural domain for studying AI scaling. <br><br> **Paper location:** Introduction, paragraph 1. | The paper frames language as a useful domain because many reasoning tasks can be expressed and evaluated in language. For finance and infrastructure, this matters because language modeling creates a measurable technical output: cross-entropy loss. That loss can then be studied as a function of model size, dataset size, and compute budget. |
-| **Key idea:** Model performance may depend on architecture, model size, training compute, and data availability.                      | This is the starting point for compute economics. If performance depends predictably on these drivers, then training becomes a resource allocation problem: how much budget should go to parameters, data, training duration, and hardware capacity?                                                                                                 |
-
----
-
-## Section 2 — Cross-Entropy Loss
+## Section 1 — Cross-Entropy Loss
 
 | Paper Reference                                                                                                                                     | My Notes                                                                                                                                                                                                                                                                                                        |
 | --------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

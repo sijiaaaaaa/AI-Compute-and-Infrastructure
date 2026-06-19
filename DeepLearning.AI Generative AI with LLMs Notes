@@ -1,1 +1,2042 @@
 
+# DeepLearning.AI / AWS — Generative AI with LLMs Notes
+
+> Original study notes based on the DeepLearning.AI / AWS course **Generative AI with Large Language Models**.  
+> This is a structured learning summary, not a verbatim transcript of the course.
+
+---
+
+## Table of Contents
+
+- [0. Course Overview](#0-course-overview)
+- [Week 1 — LLM Use Cases, Project Lifecycle, and Pre-training](#week-1--llm-use-cases-project-lifecycle-and-pre-training)
+  - [1. What Is Generative AI?](#1-what-is-generative-ai)
+  - [2. What Is an LLM?](#2-what-is-an-llm)
+  - [3. Transformer Architecture](#3-transformer-architecture)
+  - [4. Tokenization](#4-tokenization)
+  - [5. Embeddings and Positional Encoding](#5-embeddings-and-positional-encoding)
+  - [6. Self-Attention](#6-self-attention)
+  - [7. Multi-Head Attention](#7-multi-head-attention)
+  - [8. Transformer Block](#8-transformer-block)
+  - [9. Encoder-only / Decoder-only / Encoder-decoder Models](#9-encoder-only--decoder-only--encoder-decoder-models)
+  - [10. Text Generation](#10-text-generation)
+  - [11. Generation Configuration](#11-generation-configuration)
+  - [12. Prompt Engineering](#12-prompt-engineering)
+  - [13. Generative AI Project Lifecycle](#13-generative-ai-project-lifecycle)
+  - [14. Pre-training](#14-pre-training)
+  - [15. Compute Challenges](#15-compute-challenges)
+  - [16. Scaling Laws](#16-scaling-laws)
+  - [17. Domain Adaptation](#17-domain-adaptation)
+- [Week 2 — Fine-tuning and Evaluation](#week-2--fine-tuning-and-evaluation)
+  - [18. Fine-tuning](#18-fine-tuning)
+  - [19. Prompting vs Fine-tuning](#19-prompting-vs-fine-tuning)
+  - [20. Instruction Fine-tuning](#20-instruction-fine-tuning)
+  - [21. Single-task Fine-tuning](#21-single-task-fine-tuning)
+  - [22. Multi-task Fine-tuning](#22-multi-task-fine-tuning)
+  - [23. Catastrophic Forgetting](#23-catastrophic-forgetting)
+  - [24. Evaluation](#24-evaluation)
+  - [25. Benchmarks](#25-benchmarks)
+  - [26. PEFT](#26-peft)
+  - [27. LoRA](#27-lora)
+  - [28. Soft Prompts / Prompt Tuning](#28-soft-prompts--prompt-tuning)
+- [Week 3 — RLHF, Deployment, and LLM Applications](#week-3--rlhf-deployment-and-llm-applications)
+  - [29. Alignment](#29-alignment)
+  - [30. RLHF](#30-rlhf)
+  - [31. PPO](#31-ppo)
+  - [32. KL Divergence](#32-kl-divergence)
+  - [33. Reward Hacking](#33-reward-hacking)
+  - [34. Scaling Human Feedback](#34-scaling-human-feedback)
+  - [35. Deployment Optimization](#35-deployment-optimization)
+  - [36. RAG](#36-rag)
+  - [37. LLM + External Tools](#37-llm--external-tools)
+  - [38. Chain-of-Thought Prompting](#38-chain-of-thought-prompting)
+  - [39. PAL](#39-pal)
+  - [40. ReAct](#40-react)
+  - [41. LLM Application Architecture](#41-llm-application-architecture)
+  - [42. Responsible AI](#42-responsible-ai)
+- [Key Decision Framework](#key-decision-framework)
+- [Finance & Strategy Translation](#finance--strategy-translation)
+- [Cheat Sheet](#cheat-sheet)
+- [References](#references)
+
+---
+
+# 0. Course Overview
+
+This course covers the full lifecycle of building applications with Large Language Models:
+
+```text
+Business problem
+→ Select base model
+→ Prompting / RAG / Fine-tuning / RLHF
+→ Evaluate
+→ Optimize cost and latency
+→ Deploy
+→ Monitor
+```
+
+The core idea is:
+
+> Do not immediately train or fine-tune a model.  
+> Start with prompting and RAG.  
+> Consider fine-tuning only when the task is stable, data is available, and prompting or RAG is not enough.
+
+---
+
+# Week 1 — LLM Use Cases, Project Lifecycle, and Pre-training
+
+## 1. What Is Generative AI?
+
+Generative AI refers to AI systems that can generate new content, such as:
+
+- Text
+- Code
+- Images
+- Audio
+- Video
+- Structured data
+
+Common use cases:
+
+- Text generation
+- Summarization
+- Question answering
+- Translation
+- Classification
+- Information extraction
+- Code generation
+- Reasoning and planning
+- Tool use and workflow automation
+
+In practical terms:
+
+> Generative AI turns language into outputs, decisions, code, workflows, or actions.
+
+---
+
+## 2. What Is an LLM?
+
+A Large Language Model, or LLM, is a model trained on large-scale text data to predict the next token.
+
+The basic training objective is:
+
+```text
+Given previous tokens, predict the next token.
+```
+
+Example:
+
+```text
+Input: The capital of France is
+Prediction: Paris
+```
+
+LLMs are useful because next-token prediction at scale leads to broad capabilities:
+
+- Language understanding
+- World knowledge
+- Pattern recognition
+- Reasoning-like behavior
+- Code generation
+- Instruction following
+
+However, LLMs do not truly “know” things like a database. They generate statistically likely outputs based on learned patterns.
+
+---
+
+## 3. Transformer Architecture
+
+The Transformer is the foundation of modern LLMs.
+
+Before Transformers, sequence models like RNNs and LSTMs had limitations:
+
+- Slow sequential processing
+- Difficult parallelization
+- Weak long-range dependency handling
+- Scaling challenges
+
+Transformers solve these problems using **attention**.
+
+Main advantages:
+
+- Parallel processing of tokens
+- Better long-context relationship modeling
+- Scales well with data, parameters, and compute
+- Forms the foundation of GPT, BERT, T5, Claude, Llama, and many other models
+
+---
+
+## 4. Tokenization
+
+LLMs do not read raw words directly. They read **tokens**.
+
+A token can be:
+
+- A full word
+- A subword
+- A character
+- A punctuation mark
+- A space
+- A code symbol
+
+Example:
+
+```text
+"unbelievable" → "un", "believ", "able"
+```
+
+The general flow is:
+
+```text
+Raw text
+→ Tokenizer
+→ Token IDs
+→ Embeddings
+→ Transformer layers
+→ Output logits
+→ Next token
+```
+
+Important concepts:
+
+| Concept | Meaning |
+|---|---|
+| Vocabulary size | Number of tokens the model recognizes |
+| Context window | Maximum number of tokens the model can process at once |
+| Input tokens | Tokens provided to the model |
+| Output tokens | Tokens generated by the model |
+| Token cost | API and inference cost are often token-based |
+
+Output tokens are usually more expensive than input tokens because generation happens one token at a time.
+
+---
+
+## 5. Embeddings and Positional Encoding
+
+Token IDs are just numbers. The model needs dense vector representations called **embeddings**.
+
+```text
+Token ID → Embedding vector
+```
+
+Embeddings capture semantic relationships. Words with similar meanings tend to be closer in embedding space.
+
+Example:
+
+```text
+king, queen, prince, monarchy
+```
+
+These words are likely to have related representations.
+
+However, Transformers do not naturally know word order. Therefore, they need **positional encoding** or **positional embeddings**.
+
+Example:
+
+```text
+The dog bit the man.
+The man bit the dog.
+```
+
+The words are the same, but the order changes the meaning. Positional information helps the model understand sequence order.
+
+---
+
+## 6. Self-Attention
+
+Self-attention allows each token to look at other tokens in the sequence and decide which ones matter.
+
+Each token produces three vectors:
+
+| Vector | Meaning |
+|---|---|
+| Query, Q | What information am I looking for? |
+| Key, K | What information do I contain? |
+| Value, V | What information should I pass along? |
+
+Attention formula:
+
+```text
+Attention(Q, K, V) = softmax(QKᵀ / √d_k) V
+```
+
+Intuition:
+
+1. Compare Query with Keys.
+2. Calculate attention scores.
+3. Convert scores into probabilities using softmax.
+4. Use those probabilities to weight the Values.
+5. Produce a context-aware representation.
+
+Example:
+
+```text
+The animal didn't cross the street because it was too tired.
+```
+
+The model needs to understand that `it` likely refers to `animal`, not `street`.
+
+Self-attention helps the model learn this relationship.
+
+---
+
+## 7. Multi-Head Attention
+
+A single attention head can focus on one type of relationship.  
+Multi-head attention lets the model learn multiple types of relationships at once.
+
+Example:
+
+```text
+Head 1: grammatical structure
+Head 2: pronoun reference
+Head 3: entity relationship
+Head 4: time sequence
+Head 5: topic relevance
+```
+
+The outputs from multiple heads are combined and passed to the next layer.
+
+---
+
+## 8. Transformer Block
+
+A Transformer block usually contains:
+
+```text
+Input embeddings
+→ Multi-head self-attention
+→ Add & LayerNorm
+→ Feed-forward network
+→ Add & LayerNorm
+→ Output
+```
+
+Key components:
+
+| Component | Purpose |
+|---|---|
+| Multi-head attention | Learns relationships across tokens |
+| Feed-forward network | Applies nonlinear transformation |
+| Residual connection | Helps train deep networks |
+| Layer normalization | Stabilizes training |
+| Stacked layers | Enables increasingly complex representations |
+
+---
+
+## 9. Encoder-only / Decoder-only / Encoder-decoder Models
+
+### Encoder-only Models
+
+Examples:
+
+- BERT
+- RoBERTa
+
+Best for:
+
+- Classification
+- Sentiment analysis
+- Information extraction
+- Semantic search
+- Embeddings
+
+Characteristics:
+
+- Bidirectional context
+- Strong understanding
+- Not ideal for long-form generation
+
+---
+
+### Decoder-only Models
+
+Examples:
+
+- GPT-style models
+- Llama-style models
+- Claude-style models
+
+Best for:
+
+- Text generation
+- Conversation
+- Code generation
+- Agentic workflows
+
+Characteristics:
+
+- Autoregressive generation
+- Predicts next token from previous tokens
+- Uses causal mask to prevent seeing future tokens
+
+---
+
+### Encoder-decoder Models
+
+Examples:
+
+- T5
+- FLAN-T5
+- BART
+
+Best for:
+
+- Summarization
+- Translation
+- Question answering
+- Text-to-text tasks
+
+Characteristics:
+
+- Encoder processes input
+- Decoder generates output
+- Useful for structured text transformation
+
+---
+
+## 10. Text Generation
+
+LLMs generate text by repeatedly predicting the next token.
+
+```text
+Input tokens
+→ Model
+→ Probability distribution over vocabulary
+→ Select next token
+→ Append token
+→ Repeat
+```
+
+Example:
+
+```text
+Prompt: The capital of France is
+Model output: Paris
+```
+
+At each step, the model produces probabilities for all possible next tokens.
+
+---
+
+## 11. Generation Configuration
+
+Generation quality is controlled not only by the prompt, but also by decoding parameters.
+
+### max_new_tokens
+
+Controls the maximum number of tokens generated.
+
+- Too low: output may be cut off
+- Too high: output may become verbose or costly
+
+### temperature
+
+Controls randomness.
+
+```text
+Low temperature → deterministic, stable
+High temperature → creative, diverse, random
+```
+
+Use cases:
+
+| Use case | Recommended temperature |
+|---|---|
+| Financial analysis | Low |
+| SQL generation | Low |
+| Factual QA | Low |
+| Brainstorming | Medium to high |
+| Creative writing | High |
+
+### top-k
+
+The model samples only from the top `k` most likely tokens.
+
+Lower `k` means more conservative output.
+
+### top-p
+
+Also called nucleus sampling.
+
+The model samples from the smallest set of tokens whose cumulative probability reaches `p`.
+
+### Greedy decoding
+
+Always selects the highest-probability token.
+
+Pros:
+
+- Stable
+- Predictable
+
+Cons:
+
+- Can be repetitive
+- Less creative
+
+### Beam search
+
+Keeps several candidate sequences and chooses the best one.
+
+Useful for:
+
+- Translation
+- Summarization
+- Structured generation
+
+Less ideal for open-ended creative generation.
+
+---
+
+## 12. Prompt Engineering
+
+Prompt engineering is the cheapest and fastest way to adapt an LLM.
+
+### Zero-shot Prompting
+
+No examples are provided.
+
+```text
+Summarize the following customer conversation in 3 bullet points.
+```
+
+### One-shot Prompting
+
+One example is provided.
+
+```text
+Example:
+Input: ...
+Output: ...
+
+Now summarize this:
+Input: ...
+```
+
+### Few-shot Prompting
+
+Multiple examples are provided.
+
+Useful for:
+
+- Classification
+- Structured output
+- Style imitation
+- Format control
+
+### Instruction Prompting
+
+A strong prompt usually includes:
+
+```text
+Role
+Task
+Context
+Input
+Output format
+Constraints
+Examples
+Evaluation criteria
+```
+
+Example:
+
+```text
+You are a finance analyst.
+
+Summarize the following business update for an executive audience.
+
+Output format:
+1. Key movement
+2. Driver
+3. Risk
+4. Follow-up needed
+
+Keep it under 150 words.
+```
+
+### Delimiters
+
+Use delimiters to separate instructions from input.
+
+```text
+Text:
+"""
+...
+"""
+```
+
+### Structured Output
+
+Ask the model to output JSON, tables, or clearly defined fields.
+
+```json
+{
+  "summary": "...",
+  "risks": ["..."],
+  "owner": "...",
+  "next_step": "..."
+}
+```
+
+### Limitations of Prompting
+
+Prompting does not fully solve:
+
+- Lack of private knowledge
+- Hallucination
+- Inconsistent formatting
+- Complex business logic
+- Long-context cost
+- Need for stable behavior
+
+If prompting is not enough, consider:
+
+```text
+Prompt engineering
+→ RAG
+→ Fine-tuning
+→ RLHF / custom training
+```
+
+---
+
+## 13. Generative AI Project Lifecycle
+
+A real LLM project should follow a structured lifecycle.
+
+### Step 1: Define Scope
+
+Clarify:
+
+- Who is the user?
+- What is the input?
+- What is the expected output?
+- What is the business goal?
+- What does success mean?
+- What is the cost of error?
+- Is the task high-risk?
+- What latency is acceptable?
+- What data privacy constraints exist?
+
+### Step 2: Choose Model
+
+Evaluate models based on:
+
+- Task type
+- Model size
+- Context window
+- Cost
+- Latency
+- Accuracy
+- Safety
+- Fine-tuning support
+- Tool use support
+- Deployment environment
+- Data privacy requirements
+
+### Step 3: Adapt Model
+
+Options:
+
+```text
+Prompt engineering
+RAG
+Fine-tuning
+PEFT
+RLHF
+Domain-specific pre-training
+```
+
+### Step 4: Evaluate
+
+Evaluation dimensions:
+
+- Factual accuracy
+- Relevance
+- Completeness
+- Hallucination rate
+- Toxicity and safety
+- Formatting accuracy
+- Latency
+- Cost
+- User satisfaction
+- Business metric impact
+
+### Step 5: Deploy
+
+Deployment considerations:
+
+- API vs self-hosting
+- Scaling
+- Batching
+- Caching
+- Rate limits
+- Logging
+- Monitoring
+- Guardrails
+- Fallbacks
+- Human-in-the-loop
+
+### Step 6: Monitor and Iterate
+
+Monitor:
+
+- Prompt drift
+- User behavior changes
+- Data freshness
+- Hallucination
+- Cost spikes
+- Latency degradation
+- Safety incidents
+
+---
+
+## 14. Pre-training
+
+Pre-training is the process of training a model on massive amounts of text data.
+
+The objective is usually:
+
+```text
+Given previous tokens, predict the next token.
+```
+
+Example:
+
+```text
+The CFO reviewed the monthly P&L and noticed that revenue ...
+```
+
+The model learns to predict likely continuations such as:
+
+```text
+declined
+increased
+missed expectations
+exceeded forecast
+```
+
+Pre-training requires:
+
+- Massive datasets
+- Data cleaning
+- Tokenization
+- Distributed training
+- GPUs or TPUs
+- Optimizers
+- Checkpointing
+- Evaluation sets
+- Safety filtering
+
+---
+
+## 15. Compute Challenges
+
+Training LLMs is compute-intensive.
+
+Main bottlenecks:
+
+- GPU memory
+- GPU compute
+- Network bandwidth
+- Data loading
+- Checkpoint storage
+- Training instability
+- Cost
+- Energy
+- Failure recovery
+
+Memory is consumed by:
+
+```text
+Model parameters
+Gradients
+Optimizer states
+Activations
+Temporary buffers
+```
+
+Common optimization techniques:
+
+- Mixed precision training
+- Gradient checkpointing
+- Data parallelism
+- Model parallelism
+- Tensor parallelism
+- Pipeline parallelism
+- ZeRO optimizer
+- Activation recomputation
+- Efficient attention
+- Checkpoint sharding
+
+From a finance and infrastructure perspective, LLM training cost is not just GPU hours.
+
+It also includes:
+
+```text
+GPU acquisition or rental
+Networking
+Storage
+Utilization loss
+Failed runs
+Engineering labor
+Data pipeline
+Energy and cooling
+Opportunity cost
+```
+
+---
+
+## 16. Scaling Laws
+
+Scaling laws describe how model performance improves with:
+
+- More parameters
+- More data
+- More compute
+
+Important intuition:
+
+```text
+More parameters alone are not enough.
+More data alone is not enough.
+More compute alone is not enough.
+The balance between model size, data size, and compute matters.
+```
+
+The Chinchilla-style insight is especially important:
+
+> Given a fixed compute budget, models should be scaled with a better balance between parameter count and training tokens.
+
+Finance translation:
+
+- Training compute is upfront cost.
+- Inference compute is recurring cost.
+- Bigger models are not always economically optimal.
+- For high-traffic products, inference cost can dominate training cost.
+- Total lifecycle cost matters more than one-time training cost.
+
+---
+
+## 17. Domain Adaptation
+
+Domain adaptation makes a general model better for a specific domain.
+
+### Continued Pre-training
+
+Continue training the model on domain-specific text.
+
+Useful for:
+
+- Healthcare
+- Legal
+- Finance
+- Scientific research
+- Code
+- Internal company data
+
+Risks:
+
+- High cost
+- Requires large high-quality datasets
+- Risk of catastrophic forgetting
+- Complex evaluation
+
+### Fine-tuning
+
+Train the model on labeled task-specific examples.
+
+More lightweight than continued pre-training.
+
+### RAG
+
+Retrieve external knowledge and insert it into the prompt.
+
+Best when:
+
+- Knowledge changes frequently
+- Sources need to be cited
+- Private knowledge should not be baked into model weights
+
+---
+
+# Week 2 — Fine-tuning and Evaluation
+
+## 18. Fine-tuning
+
+Fine-tuning means continuing training from a pre-trained model using a smaller, task-specific dataset.
+
+Pre-training learns:
+
+```text
+General language
+Broad knowledge
+General reasoning patterns
+```
+
+Fine-tuning teaches:
+
+```text
+Specific task behavior
+Output format
+Domain style
+Instruction following
+```
+
+---
+
+## 19. Prompting vs Fine-tuning
+
+### Use Prompting When
+
+- You need a quick prototype
+- You have little data
+- The task changes often
+- You do not want to modify model weights
+- Cost matters
+- The output does not need extreme consistency
+
+### Use Fine-tuning When
+
+- The task is stable
+- You have high-quality examples
+- Prompting is too long or unstable
+- You need consistent formatting
+- You need a specific tone or domain style
+- You want to reduce prompt token cost at scale
+
+### Do Not Fine-tune Just To Add Knowledge
+
+If the problem is:
+
+```text
+The model does not know my internal documents.
+```
+
+Use RAG first.
+
+If the problem is:
+
+```text
+The model knows what to do but does not behave consistently.
+```
+
+Fine-tuning may help.
+
+---
+
+## 20. Instruction Fine-tuning
+
+Instruction fine-tuning trains a model to follow human instructions.
+
+Training data format:
+
+```text
+Instruction: Summarize the following conversation in 3 bullets.
+Input: ...
+Response: ...
+```
+
+Benefits:
+
+- Better instruction following
+- Better formatting
+- Better task generalization
+- More useful assistant-like behavior
+
+Instruction-tuned models are usually much better for real applications than raw base models.
+
+---
+
+## 21. Single-task Fine-tuning
+
+Single-task fine-tuning trains the model on one specific task.
+
+Examples:
+
+- Customer support summarization
+- Contract clause classification
+- Finance variance explanation
+- Medical entity extraction
+
+Pros:
+
+- Strong improvement on target task
+- Clear data format
+- Easy evaluation
+
+Cons:
+
+- Weak generalization
+- Risk of overfitting
+- Can hurt other model capabilities
+- Needs retraining if task changes
+
+---
+
+## 22. Multi-task Fine-tuning
+
+Multi-task fine-tuning trains the model on multiple task types.
+
+Examples:
+
+```text
+Summarization
+Classification
+Translation
+Question answering
+Information extraction
+Reasoning
+```
+
+Pros:
+
+- Better generalization
+- More assistant-like behavior
+- Handles broader instructions
+
+Cons:
+
+- More complex data preparation
+- Task conflicts
+- More difficult evaluation
+
+---
+
+## 23. Catastrophic Forgetting
+
+Catastrophic forgetting happens when fine-tuning causes the model to lose earlier capabilities.
+
+Example:
+
+A model fine-tuned only on finance summaries may become better at finance summaries but worse at general conversation.
+
+Ways to reduce risk:
+
+- Lower learning rate
+- Early stopping
+- Use PEFT
+- Mix in general-purpose data
+- Evaluate across multiple tasks
+- Keep base model as fallback
+
+---
+
+## 24. Evaluation
+
+LLM evaluation is hard because many tasks do not have one correct answer.
+
+### Automatic Metrics
+
+#### ROUGE
+
+Commonly used for summarization.
+
+Measures overlap between generated text and reference text.
+
+Limitations:
+
+- Surface-level overlap
+- Does not fully capture meaning
+- High ROUGE does not always mean high quality
+
+#### BLEU
+
+Commonly used for translation.
+
+Also based on n-gram overlap.
+
+#### Exact Match
+
+Useful when there is one exact answer.
+
+Example:
+
+```text
+Question: What is 2 + 2?
+Answer: 4
+```
+
+#### F1 Score
+
+Useful for:
+
+- Classification
+- Information extraction
+- Entity extraction
+
+---
+
+### Human Evaluation
+
+Human evaluation is often more meaningful.
+
+Common dimensions:
+
+- Helpfulness
+- Correctness
+- Relevance
+- Completeness
+- Conciseness
+- Harmlessness
+- Tone
+- Format compliance
+
+---
+
+### LLM-as-Judge
+
+Another LLM can be used to evaluate outputs.
+
+Pros:
+
+- Scalable
+- Cheaper than human review
+- Fast
+
+Risks:
+
+- Judge model can be biased
+- Judge model can hallucinate
+- Needs calibration against human judgment
+
+---
+
+### Business Evaluation
+
+Final evaluation should connect to business outcomes.
+
+Examples:
+
+- Time saved
+- Accuracy threshold
+- User satisfaction
+- Escalation reduction
+- Revenue impact
+- Conversion impact
+- Retention impact
+- Cost per task
+
+---
+
+## 25. Benchmarks
+
+Benchmarks are standardized datasets used to compare models.
+
+Benchmark types:
+
+- General knowledge
+- Reasoning
+- Math
+- Coding
+- Safety
+- Bias
+- Truthfulness
+- Summarization
+- Question answering
+
+Important caveats:
+
+- Benchmarks may be contaminated by training data.
+- High benchmark scores do not guarantee good business performance.
+- Internal evaluation sets are often more important than public benchmarks.
+
+---
+
+## 26. PEFT
+
+PEFT stands for **Parameter-Efficient Fine-Tuning**.
+
+Instead of training all model parameters, PEFT trains only a small number of additional parameters.
+
+Why PEFT matters:
+
+- Full fine-tuning is expensive.
+- Full fine-tuning requires large GPU memory.
+- Full fine-tuning creates large model copies.
+- PEFT allows multiple adapters for different tasks.
+
+Benefits:
+
+- Lower training cost
+- Lower memory requirement
+- Faster experimentation
+- Easier storage and deployment
+- Reduced risk of catastrophic forgetting
+
+---
+
+## 27. LoRA
+
+LoRA stands for **Low-Rank Adaptation**.
+
+LoRA freezes the original model weights and trains small low-rank matrices.
+
+Original weight matrix:
+
+```text
+W
+```
+
+LoRA learns a small update:
+
+```text
+W' = W + ΔW
+ΔW = A × B
+```
+
+Where `A` and `B` are small trainable matrices.
+
+Why it works:
+
+- The base model remains frozen.
+- Only a small number of parameters are trained.
+- Multiple LoRA adapters can share the same base model.
+
+Good use cases:
+
+- Domain adaptation
+- Style adaptation
+- Task-specific summarization
+- Classification
+- Multiple business-line adapters
+
+Finance translation:
+
+```text
+Full fine-tuning = train and store a large model copy per task
+LoRA = shared base model + small adapters per task
+```
+
+---
+
+## 28. Soft Prompts / Prompt Tuning
+
+Soft prompts are trainable embedding vectors, not human-readable words.
+
+Human-written prompt:
+
+```text
+Summarize this text.
+```
+
+Soft prompt:
+
+```text
+Trainable vectors + input tokens
+```
+
+Pros:
+
+- Parameter-efficient
+- Does not change base model
+- Can learn task-specific behavior
+
+Cons:
+
+- Not human-readable
+- Hard to debug
+- Effectiveness depends on task
+
+---
+
+# Week 3 — RLHF, Deployment, and LLM Applications
+
+## 29. Alignment
+
+Base models are trained to predict tokens, not necessarily to help humans.
+
+A raw base model may:
+
+- Ignore instructions
+- Hallucinate
+- Produce toxic content
+- Be overly confident
+- Provide unsafe responses
+- Fail to follow user intent
+
+Alignment aims to make model behavior more consistent with human preferences.
+
+Common alignment goals:
+
+```text
+Helpful
+Honest
+Harmless
+```
+
+---
+
+## 30. RLHF
+
+RLHF stands for **Reinforcement Learning from Human Feedback**.
+
+Typical RLHF pipeline:
+
+```text
+Step 1: Supervised fine-tuning
+Step 2: Collect human preference data
+Step 3: Train reward model
+Step 4: Optimize policy using reinforcement learning
+Step 5: Evaluate helpfulness, harmlessness, and honesty
+```
+
+### Step 1: Supervised Fine-tuning
+
+Train the model on high-quality examples.
+
+```text
+Prompt → Ideal response
+```
+
+This creates an initial instruction-following model.
+
+### Step 2: Human Preference Data
+
+For the same prompt, generate multiple responses and ask humans to rank them.
+
+```text
+Response A > Response B > Response C
+```
+
+Ranking is usually cheaper than asking humans to write perfect answers from scratch.
+
+### Step 3: Reward Model
+
+Train a reward model to predict which responses humans prefer.
+
+Input:
+
+```text
+Prompt + response
+```
+
+Output:
+
+```text
+Reward score
+```
+
+### Step 4: Reinforcement Learning Optimization
+
+Use the reward model to score outputs and optimize the LLM to produce higher-reward responses.
+
+---
+
+## 31. PPO
+
+PPO stands for **Proximal Policy Optimization**.
+
+In RLHF:
+
+| RL Term | LLM Context |
+|---|---|
+| Policy | The LLM |
+| Action | Generated token sequence |
+| Reward | Reward model score |
+| Optimization target | Generate responses humans prefer |
+
+Intuition:
+
+```text
+Reward model: This response is good.
+PPO: Generate more responses like this.
+KL penalty: Do not drift too far from the original model.
+```
+
+PPO is used because it limits overly large updates and helps stabilize training.
+
+---
+
+## 32. KL Divergence
+
+KL divergence measures how different two probability distributions are.
+
+In RLHF, KL divergence is often used to prevent the new model from drifting too far from the original model.
+
+Why this matters:
+
+If the model only maximizes reward, it may exploit weaknesses in the reward model and generate unnatural or low-quality outputs.
+
+---
+
+## 33. Reward Hacking
+
+Reward hacking happens when the model exploits the reward function instead of truly solving the task.
+
+Examples:
+
+- Producing overly long answers because the reward model prefers detail
+- Being polite but not useful
+- Refusing safe requests because refusals look safer
+- Using keywords that the reward model likes without giving a good answer
+
+Ways to reduce reward hacking:
+
+- Better reward model
+- Multi-dimensional reward
+- Human audits
+- Adversarial testing
+- Red teaming
+- KL constraints
+- Continuous evaluation
+
+---
+
+## 34. Scaling Human Feedback
+
+Human feedback is expensive and slow.
+
+Ways to scale it:
+
+- Reward models
+- Active learning
+- Label high-uncertainty samples
+- Synthetic feedback
+- Constitutional rules
+- LLM-assisted labeling
+- Expert review for high-risk areas
+
+Key point:
+
+> Alignment data quality matters more than raw quantity.
+
+---
+
+## 35. Deployment Optimization
+
+Once a model is deployed, the key constraints become:
+
+```text
+Latency
+Throughput
+Cost
+Quality
+Safety
+Reliability
+```
+
+### Quantization
+
+Reduce model precision, for example:
+
+```text
+FP16 → INT8 → INT4
+```
+
+Pros:
+
+- Lower memory usage
+- Faster inference
+- Lower cost
+
+Risk:
+
+- Quality degradation
+
+### Distillation
+
+Train a smaller model to imitate a larger model.
+
+Pros:
+
+- Cheaper inference
+- Lower latency
+
+Cons:
+
+- Lower capability
+
+### Pruning
+
+Remove less important weights or structures.
+
+Use carefully with LLMs.
+
+### Batching
+
+Process multiple requests together to improve GPU utilization.
+
+Tradeoff:
+
+- Higher throughput
+- Potentially higher latency per request
+
+### Caching
+
+Cache repeated results.
+
+Useful for:
+
+- FAQ
+- Repeated queries
+- Embeddings
+- Knowledge retrieval
+- Common prompts
+
+### Model Routing
+
+Do not use the largest model for every task.
+
+Example:
+
+```text
+Simple classification → small model
+Internal summary → medium model
+Complex reasoning → large model
+High-risk decision → large model + human review
+```
+
+Finance translation:
+
+```text
+Model routing is a key lever for inference cost control.
+```
+
+---
+
+## 36. RAG
+
+RAG stands for **Retrieval-Augmented Generation**.
+
+RAG combines external knowledge retrieval with LLM generation.
+
+Pipeline:
+
+```text
+User question
+→ Embed query
+→ Retrieve relevant documents from vector database
+→ Insert retrieved context into prompt
+→ LLM generates answer
+→ Return answer with citations
+```
+
+RAG is useful when:
+
+- The model needs external knowledge
+- Knowledge changes frequently
+- Internal documents are required
+- Citations are needed
+- Private knowledge should not be stored in model weights
+
+RAG can fail when:
+
+- Retrieval misses the relevant document
+- Documents are outdated
+- Chunking is poor
+- Retrieved context is irrelevant
+- The question requires reasoning across many sources
+
+Key design choices:
+
+- Chunk size
+- Chunk overlap
+- Embedding model
+- Vector database
+- Top-k retrieval
+- Reranking
+- Metadata filtering
+- Citation strategy
+- Freshness controls
+- Access permissions
+- Evaluation set
+
+---
+
+## 37. LLM + External Tools
+
+LLMs have limitations:
+
+- They are not calculators.
+- They do not naturally access real-time data.
+- They do not automatically query databases.
+- They may hallucinate.
+- They cannot execute real-world actions unless connected to tools.
+
+External tools can include:
+
+- Calculator
+- Python interpreter
+- SQL database
+- Search engine
+- Calendar
+- Email
+- CRM
+- Internal APIs
+- Workflow automation systems
+
+General flow:
+
+```text
+User request
+→ LLM decides tool is needed
+→ Tool executes
+→ Tool result returns to LLM
+→ LLM summarizes or takes next action
+```
+
+---
+
+## 38. Chain-of-Thought Prompting
+
+Chain-of-thought prompting encourages the model to break down a problem into intermediate reasoning steps.
+
+Useful for:
+
+- Math
+- Logic
+- Multi-step planning
+- Business case analysis
+- Complex reasoning
+
+In production systems, it is often better to let the model reason internally and provide:
+
+- Final answer
+- Key assumptions
+- Short explanation
+- Verification steps
+
+Rather than exposing every reasoning step.
+
+---
+
+## 39. PAL
+
+PAL stands for **Program-Aided Language Models**.
+
+The idea:
+
+> Let the LLM understand the problem and write code.  
+> Let the program execute the calculation.
+
+Example:
+
+```text
+Question:
+Revenue increased from 120 to 150. What is the growth rate?
+
+Python:
+growth = (150 - 120) / 120
+print(growth)
+```
+
+This is more reliable than asking the model to do arithmetic directly.
+
+Useful for:
+
+- Finance analysis
+- Variance calculations
+- SQL generation
+- Forecast bridges
+- Cohort analysis
+- Scenario modeling
+
+---
+
+## 40. ReAct
+
+ReAct stands for **Reasoning + Acting**.
+
+The model alternates between reasoning and taking actions.
+
+Pattern:
+
+```text
+Thought
+→ Action
+→ Observation
+→ Thought
+→ Action
+→ Observation
+→ Final answer
+```
+
+Useful for:
+
+- Web research
+- Database question answering
+- Multi-step workflows
+- Agents
+- Troubleshooting
+- Operations automation
+
+Risks:
+
+- Wrong tool call
+- Too many steps
+- High cost
+- Incorrect observations
+- Need for access control and safety guardrails
+
+---
+
+## 41. LLM Application Architecture
+
+A mature LLM application is not just one prompt and one model.
+
+Typical components:
+
+```text
+Frontend
+Backend API
+Prompt templates
+Model gateway
+RAG retriever
+Vector database
+Tool/function calling layer
+Business rules
+Guardrails
+Evaluation pipeline
+Logging and monitoring
+Human review queue
+Feedback collection
+Cost tracking
+```
+
+### Build vs Buy
+
+Questions to ask:
+
+```text
+Use API?
+Use managed service?
+Self-host open-source model?
+Fine-tune?
+Train from scratch?
+```
+
+### Data Privacy
+
+Consider:
+
+- Can user data go to a third-party API?
+- Is a private endpoint required?
+- Are prompts logged?
+- Is data used for training?
+- Does the data contain PII, PHI, or financial information?
+
+### Latency
+
+Different tasks have different latency expectations.
+
+```text
+Chat: 1-3 seconds expected
+Batch summary: minutes may be acceptable
+Back-office automation: longer may be acceptable
+```
+
+### Cost
+
+Cost components:
+
+```text
+Input tokens
+Output tokens
+Embedding calls
+Vector database
+Reranking
+Tool calls
+GPU inference
+Cache hit rate
+Human review
+Monitoring infrastructure
+```
+
+### Reliability
+
+Useful fallback patterns:
+
+```text
+Model timeout → retry
+Retrieval empty → ask clarification
+Low confidence → human review
+Unsafe request → refuse
+Tool failure → explain failure
+```
+
+---
+
+## 42. Responsible AI
+
+Responsible AI is part of production readiness.
+
+Key risks:
+
+- Bias
+- Toxicity
+- Hallucination
+- Privacy leakage
+- Copyright issues
+- Security vulnerabilities
+- Prompt injection
+- Abuse
+- Lack of explainability
+- Lack of auditability
+
+High-risk domains:
+
+- Healthcare
+- Legal
+- Financial advice
+- Recruiting
+- Credit decisions
+- Children
+- Safety-critical systems
+- Automated real-world actions
+
+Before deployment, consider:
+
+```text
+Red teaming
+Safety evaluation
+Bias testing
+PII leakage testing
+Prompt injection testing
+Access control review
+Monitoring plan
+Incident response plan
+Human oversight
+```
+
+---
+
+# Key Decision Framework
+
+## Prompt Engineering vs RAG vs Fine-tuning vs RLHF
+
+### Use Prompt Engineering When
+
+```text
+The task is simple.
+You need a fast prototype.
+You have little or no training data.
+The task changes frequently.
+You do not need private knowledge.
+```
+
+### Use RAG When
+
+```text
+The model needs external or private knowledge.
+Knowledge changes frequently.
+Citations are required.
+Internal documents are the source of truth.
+You do not want to retrain the model.
+```
+
+### Use Fine-tuning When
+
+```text
+The task is stable.
+You have high-quality labeled examples.
+You need consistent formatting.
+You need a specific style or behavior.
+Prompting is too long, expensive, or unreliable.
+```
+
+### Use PEFT / LoRA When
+
+```text
+You want fine-tuning benefits at lower cost.
+You want multiple task-specific adapters.
+You do not want to copy or retrain the full model.
+```
+
+### Use RLHF When
+
+```text
+The issue is not knowledge, but human preference.
+You need better helpfulness, harmlessness, or honesty.
+You can collect preference data.
+You need stronger alignment.
+```
+
+---
+
+# Finance & Strategy Translation
+
+This course is especially useful for understanding AI infrastructure economics.
+
+## Training Tradeoff
+
+```text
+More parameters
+→ Better capacity
+→ Higher training cost
+→ Higher inference cost
+→ Potential latency challenges
+```
+
+## Data Tradeoff
+
+```text
+More high-quality tokens
+→ Better model quality
+→ Higher data pipeline cost
+→ Higher licensing / cleaning / compliance complexity
+```
+
+## Fine-tuning Tradeoff
+
+```text
+Full fine-tuning
+→ Stronger task fit
+→ Higher GPU cost
+→ Higher storage cost
+→ More maintenance
+
+LoRA / PEFT
+→ Lower cost
+→ Modular adapters
+→ Often sufficient for enterprise use cases
+```
+
+## RAG Tradeoff
+
+```text
+RAG
+→ Lower training cost
+→ Fresh knowledge
+→ Citations possible
+→ Added retrieval latency
+→ Added vector database cost
+→ More complex evaluation
+```
+
+## Inference Tradeoff
+
+```text
+Large model
+→ Higher quality
+→ Higher cost per request
+→ Slower latency
+
+Smaller model
+→ Cheaper and faster
+→ Weaker reasoning
+→ May require routing or fallback
+```
+
+## Product Architecture Tradeoff
+
+```text
+One large model for everything
+→ Simple architecture
+→ Expensive
+
+Model routing
+→ More engineering complexity
+→ Lower unit cost
+→ Better scalability
+```
+
+Key finance insight:
+
+> AI infrastructure finance is not just asking how much GPUs cost.  
+> It is about finding the best model, data, training, inference, and deployment architecture under quality, latency, risk, and roadmap constraints.
+
+---
+
+# Cheat Sheet
+
+```text
+Transformer:
+Self-attention lets each token attend to other tokens.
+
+LLM:
+Predicts next token; generation is repeated next-token sampling.
+
+Prompting:
+Fastest and cheapest adaptation method.
+
+Temperature:
+Higher = more random. Lower = more deterministic.
+
+Top-k / Top-p:
+Sampling controls generation diversity.
+
+Pre-training:
+Learns general language patterns from massive data.
+
+Scaling laws:
+Model quality improves with data, model size, and compute, but balance matters.
+
+Fine-tuning:
+Updates model behavior for specific tasks.
+
+Instruction fine-tuning:
+Trains model to follow instructions.
+
+PEFT:
+Fine-tunes small parameter subsets instead of the full model.
+
+LoRA:
+Freezes base model and trains low-rank adapter matrices.
+
+Evaluation:
+Use task metrics + human evaluation + business metrics.
+
+RLHF:
+Uses human preference data to align model outputs.
+
+Reward model:
+Predicts which outputs humans prefer.
+
+PPO:
+Optimizes model against reward while limiting drift.
+
+Reward hacking:
+Model exploits reward function instead of solving the real task.
+
+RAG:
+Retrieves external knowledge and inserts it into the prompt.
+
+PAL:
+LLM writes a program; interpreter performs calculation.
+
+ReAct:
+Model alternates reasoning and tool actions.
+
+Responsible AI:
+Safety, privacy, bias, hallucination, auditability, and human oversight.
+```
+
+---
+
+# References
+
+- DeepLearning.AI / AWS Course: Generative AI with Large Language Models  
+  https://www.coursera.org/learn/generative-ai-with-llms
+
+- AWS Blog: Generative AI with Large Language Models Course  
+  https://aws.amazon.com/blogs/aws/generative-ai-with-large-language-models-new-hands-on-course-by-deeplearning-ai-and-aws/
+
+- Attention Is All You Need  
+  https://arxiv.org/abs/1706.03762
+
+- Scaling Laws for Neural Language Models  
+  https://arxiv.org/abs/2001.08361
+
+- Training Compute-Optimal Large Language Models  
+  https://arxiv.org/abs/2203.15556
+
+- LoRA: Low-Rank Adaptation of Large Language Models  
+  https://arxiv.org/abs/2106.09685
+
+- InstructGPT: Training Language Models to Follow Instructions with Human Feedback  
+  https://arxiv.org/abs/2203.02155
+
+- Proximal Policy Optimization Algorithms  
+  https://arxiv.org/abs/1707.06347
+
+- Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks  
+  https://arxiv.org/abs/2005.11401
+
+- PAL: Program-Aided Language Models  
+  https://arxiv.org/abs/2211.10435
+
+- ReAct: Synergizing Reasoning and Acting in Language Models  
+  https://arxiv.org/abs/2210.03629

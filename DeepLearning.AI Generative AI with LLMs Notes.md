@@ -1,4 +1,3 @@
-
 # DeepLearning.AI / AWS — Generative AI with LLMs Notes
 
 > Original study notes based on the DeepLearning.AI / AWS course **Generative AI with Large Language Models**.  
